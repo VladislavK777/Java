@@ -1,0 +1,28 @@
+<component name="libraryTable">
+  <library name="j2ee-1.4">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../j2ee-1.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../javaee-api-5.0-2.jar!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../j2ee-1.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../javaee-api-5.0-2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../j2ee-1.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../javaee-api-5.0-2.jar!/" />
+    </JAVADOC>
+    <NATIVE>
+      <root url="jar://$PROJECT_DIR$/../j2ee-1.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../javaee-api-5.0-2.jar!/" />
+    </NATIVE>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../j2ee-1.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../javaee-api-5.0-2.jar!/" />
+    </SOURCES>
+    <jarDirectory url="jar://$PROJECT_DIR$/../j2ee-1.4.jar!/" recursive="false" />
+    <jarDirectory url="jar://$PROJECT_DIR$/../javaee-api-5.0-2.jar!/" recursive="false" />
+    <jarDirectory url="jar://$PROJECT_DIR$/../j2ee-1.4.jar!/" recursive="false" type="SOURCES" />
+    <jarDirectory url="jar://$PROJECT_DIR$/../javaee-api-5.0-2.jar!/" recursive="false" type="SOURCES" />
+  </library>
+</component>
