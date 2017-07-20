@@ -1,91 +1,83 @@
 package com.javarush.task.task33.task3309;
 
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
-import javax.xml.parsers.DocumentBuilder;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.StringReader;
+import java.io.IOException;
 import java.io.StringWriter;
+import java.util.regex.Pattern;
 
 /*
 Комментарий внутри xml
 */
-public class Solution
-{
-    public static String toXmlWithComment(Object obj, String tagName, String comment) throws Exception
-    {
-        JAXBContext context = JAXBContext.newInstance(obj.getClass());
-        Marshaller marshaller = context.createMarshaller();
+public class Solution {
+    public static String toXmlWithComment(Object obj, String tagName, String comment) throws IOException {
+        try {
+            JAXBContext context = JAXBContext.newInstance(obj.getClass());
+            Marshaller marshaller = context.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+            marshaller.marshal(obj, doc);
 
-        StringWriter stringWriter = new StringWriter();
-        marshaller.marshal(obj, stringWriter);
-        stringWriter.close();
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document document = builder.parse(new InputSource(new StringReader(stringWriter.toString())));
-        document.setXmlStandalone(false);
+            NodeList nodes = doc.getElementsByTagName("*");
 
-        changeTextNodesToCdataNodes(document, document);
-        NodeList list = document.getElementsByTagName(tagName);
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
 
-        for (int i = 0; i < list.getLength(); i++)
-            list.item(i).getParentNode().insertBefore(document.createComment(comment), list.item(i));
-
-        Transformer transformer = TransformerFactory.newInstance()
-                .newTransformer();
-        stringWriter = new StringWriter();
-        DOMSource source = new DOMSource(document);
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        StreamResult result = new StreamResult(stringWriter);
-
-        transformer.transform(source, result);
-        stringWriter.close();
-        return stringWriter.toString();
-    }
-
-    private static void changeTextNodesToCdataNodes(Node firstNode, Document ownerDocument)
-    {
-
-        if (firstNode.hasChildNodes())
-        {
-            NodeList children = firstNode.getChildNodes();
-
-            for (int i = 0; i < children.getLength(); i++)
-            {
-                Node node = children.item(i);
-                if (node.getNodeType() == Node.TEXT_NODE)
-                {
-                    if (node.getTextContent().matches(".*[<>&].*"))
-                        node.getParentNode().replaceChild(ownerDocument.createCDATASection(node.getTextContent()), node);
-                } else
-                {
-                    changeTextNodesToCdataNodes(node, ownerDocument);
+                if (node.getNodeName().equals(tagName)) {
+                    Comment com = doc.createComment(comment);
+                    node.getParentNode().insertBefore(com, node);
                 }
+                replaceTextWithCDATA(node, doc);
             }
-        }
-        return;
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+
+            StringWriter sw = new StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(sw));
+            return sw.toString();
+        } catch (Exception e) {
+        e.printStackTrace();
+    }
+        return null;
     }
 
-    public static void main(String[] args) {
-        String s = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><first><second>some string</second><second>some string</second><second><![CDATA[need CDATA because of < and >]]></second><second/></first>";
+    private static void replaceTextWithCDATA(Node node, Document doc) {
+        if ((node.getNodeType() == 3) && (Pattern.compile("[<>&'\"]").matcher(node.getTextContent()).find())) {
 
-        String comment = "it's a comment";
-        String tagName = "second";
+            Node cnode = doc.createCDATASection(node.getNodeValue());
+            node.getParentNode().replaceChild(cnode, node);
+        }
 
-        String res = null;
-        if (s.indexOf(tagName) > -1)
-            res = s.replace("<" + tagName + ">", "<!--" + comment + "-->" + "<" + tagName + ">");
+        NodeList list = node.getChildNodes();
 
-        System.out.println(res);
+        for (int i = 0; i < list.getLength(); i++) {
+            replaceTextWithCDATA(list.item(i), doc);
+        }
+    }
+
+
+    public static void main(String[] args) throws IOException {
+        String result = Solution.toXmlWithComment(new AnExample(), "second", "it's a comment - <needCDATA>");
+        System.out.println(result);
+    }
+
+    @XmlType(name = "anExample")
+    @XmlRootElement
+    public static class AnExample {
+        public String[] needCDATA = new String[]{"<second><![CDATA[need CDATA comment because of < and > signs. Don't need before that <second> placed inside CDATA]]></second>", ""};
     }
 }
